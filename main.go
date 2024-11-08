@@ -87,6 +87,24 @@ func addTask(description string) error {
 	return saveTasks(tasks)
 }
 
+func listTasks() error {
+	tasks, err := loadTasks()
+	if isError(err) {
+		return err
+	}
+
+	for _, task := range tasks {
+		fmt.Printf("ID: %d\n", task.Id)
+		fmt.Printf("Description: %s\n", task.Description)
+		fmt.Printf("Status: %s\n", task.Status)
+		fmt.Printf("Created At: %s\n", task.CreatedAt.Format("2006-01-02 15:04:05"))
+		fmt.Printf("Update At: %s\n", task.UpdatedAt.Format("2006-01-02 15:04:05"))
+		fmt.Println("-------------------------------------------------")
+	}
+
+	return nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: task-tracker <command> [arguments]")
@@ -110,6 +128,13 @@ func main() {
 			fmt.Printf("Error adding task: %v\n", err)
 		} else {
 			fmt.Println("Task added successfully!")
+		}
+
+	case "list":
+		err := listTasks()
+		if isError(err) {
+			fmt.Printf("Error listing tasks: %v\n", err)
+			return
 		}
 
 	default:
