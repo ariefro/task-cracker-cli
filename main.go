@@ -47,6 +47,17 @@ func loadTasks() ([]Task, error) {
 	return tasks, err
 }
 
+func saveNotes(tasks []Task) error {
+	dataByte, err := json.MarshalIndent(tasks, "", "  ")
+	if isError(err) {
+		return err
+	}
+
+	err = os.WriteFile(dataFile, dataByte, 0644)
+
+	return err
+}
+
 func main() {
 	tasks, err := loadTasks()
 	if isError(err) {
