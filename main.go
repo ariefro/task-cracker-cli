@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -105,11 +106,36 @@ func listTasks() error {
 	return nil
 }
 
+func updateTaskById(id int, description string) error {
+	tasks, err := loadTasks()
+	if isError(err) {
+		return err
+	}
+
+	for i, task := range tasks {
+		if task.Id == id {
+			tasks[i].Description = description
+			tasks[i].UpdatedAt = time.Now()
+
+			err := saveTasks(tasks)
+			if isError(err) {
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Task with ID %d not found", id)
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: task-tracker <command> [arguments]")
 		fmt.Println("Commands:")
-		fmt.Println(" add <description> Add a new task")
+		fmt.Println(" add		<description>		Add a new task")
+		fmt.Println(" list					List all tasks")
+		fmt.Println(" update		<id> <description>	Update a task by ID")
 		return
 	}
 
@@ -135,6 +161,26 @@ func main() {
 		if isError(err) {
 			fmt.Printf("Error listing tasks: %v\n", err)
 			return
+		}
+
+	case "update":
+		if len(os.Args) < 4 {
+			fmt.Println("Usage: task-tracker update <id> <description>")
+			return
+		}
+
+		id, err := strconv.Atoi(os.Args[2])
+		if isError(err) {
+			fmt.Printf("Invalid ID: %v\n", err)
+			return
+		}
+
+		description := os.Args[3]
+		err = updateTaskById(id, description)
+		if isError(err) {
+			fmt.Printf("Error updating task: %v\n", err)
+		} else {
+			fmt.Println("Task updated successfully!")
 		}
 
 	default:
