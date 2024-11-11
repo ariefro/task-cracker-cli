@@ -152,6 +152,29 @@ func markDone(id int) error {
 	return fmt.Errorf("Task with ID %d not found", id)
 }
 
+func markInProgress(id int) error {
+	tasks, err := loadTasks()
+	if isError(err) {
+		return err
+	}
+
+	for i, task := range tasks {
+		if task.Id == id {
+			tasks[i].Status = "in-progress"
+			tasks[i].UpdatedAt = time.Now()
+
+			err := saveTasks(tasks)
+			if isError(err) {
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Task with ID %d not found", id)
+}
+
 func deleteTaskById(id int) error {
 	tasks, err := loadTasks()
 	if isError(err) {
@@ -176,6 +199,7 @@ func main() {
 		fmt.Println(" list					List all tasks")
 		fmt.Println(" update		<id> <description>	Update a task description by ID")
 		fmt.Println(" mark-done	<id>			Mark a task status as done")
+		fmt.Println(" mark-in-progress	<id>			Mark a task status as in progress")
 		fmt.Println(" delete		<id>			Delete a task by ID")
 		return
 	}
@@ -243,6 +267,25 @@ func main() {
 			fmt.Println("Task updated successfully!")
 		}
 
+	case "mark-in-progress":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: task-tracker mark-in-progress <id>")
+			return
+		}
+
+		id, err := strconv.Atoi(os.Args[2])
+		if isError(err) {
+			fmt.Errorf("Invalid ID: %v\n", err)
+			return
+		}
+
+		err = markInProgress(id)
+		if isError(err) {
+			fmt.Printf("Error updating status task: %v\n", err)
+		} else {
+			fmt.Println("Task updated successfully!")
+		}
+
 	case "delete":
 		if len(os.Args) < 3 {
 			fmt.Println("Usage: task-tracker delete <id>")
@@ -264,6 +307,6 @@ func main() {
 
 	default:
 		fmt.Println("Uknown command:", command)
-		fmt.Println("Available commands: add, list, update, mark-done, delete")
+		fmt.Println("Available commands: add, list, update, mark-done, mark-in-progress, delete")
 	}
 }
