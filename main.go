@@ -129,6 +129,22 @@ func updateTaskById(id int, description string) error {
 	return fmt.Errorf("Task with ID %d not found", id)
 }
 
+func deleteTaskById(id int) error {
+	tasks, err := loadTasks()
+	if isError(err) {
+		return err
+	}
+
+	for i, task := range tasks {
+		if task.Id == id {
+			tasks = append(tasks[:i], tasks[i+1:]...)
+			return saveTasks(tasks)
+		}
+	}
+
+	return fmt.Errorf("task with ID %d not found", id)
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: task-tracker <command> [arguments]")
@@ -136,6 +152,7 @@ func main() {
 		fmt.Println(" add		<description>		Add a new task")
 		fmt.Println(" list					List all tasks")
 		fmt.Println(" update		<id> <description>	Update a task by ID")
+		fmt.Println(" delete		<id>			Delete a task by ID")
 		return
 	}
 
@@ -181,6 +198,25 @@ func main() {
 			fmt.Printf("Error updating task: %v\n", err)
 		} else {
 			fmt.Println("Task updated successfully!")
+		}
+
+	case "delete":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: task-tracker delete <id>")
+			return
+		}
+
+		id, err := strconv.Atoi(os.Args[2])
+		if isError(err) {
+			fmt.Printf("Invalid ID: %v\n", err)
+			return
+		}
+
+		err = deleteTaskById(id)
+		if isError(err) {
+			fmt.Printf("Error deleting task: %v\n", err)
+		} else {
+			fmt.Println("Task deleted successfully!")
 		}
 
 	default:
