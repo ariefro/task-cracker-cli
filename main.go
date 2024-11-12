@@ -88,13 +88,33 @@ func addTask(description string) error {
 	return saveTasks(tasks)
 }
 
-func listTasks() error {
+func listTasks(status string) error {
 	tasks, err := loadTasks()
 	if isError(err) {
 		return err
 	}
 
-	for _, task := range tasks {
+	filteredTasks := tasks
+	if status != "" {
+		if status != "done" && status != "in-progress" && status != "todo" {
+			fmt.Println("Invalid parameter. Available options: todo, in-progress, done")
+			return nil
+		}
+
+		filteredTasks = []Task{}
+		for _, task := range tasks {
+			if task.Status == status {
+				filteredTasks = append(filteredTasks, task)
+			}
+		}
+	}
+
+	if len(filteredTasks) == 0 {
+		fmt.Printf("No tasks found with status '%s'.\n", status)
+		return nil
+	}
+
+	for _, task := range filteredTasks {
 		fmt.Printf("ID: %d\n", task.Id)
 		fmt.Printf("Description: %s\n", task.Description)
 		fmt.Printf("Status: %s\n", task.Status)
@@ -196,7 +216,7 @@ func main() {
 		fmt.Println("Usage: task-tracker <command> [arguments]")
 		fmt.Println("Commands:")
 		fmt.Println(" add		<description>		Add a new task")
-		fmt.Println(" list					List all tasks")
+		fmt.Println(" list [status]				List all tasks, optionally filtered by status")
 		fmt.Println(" update		<id> <description>	Update a task description by ID")
 		fmt.Println(" mark-done	<id>			Mark a task status as done")
 		fmt.Println(" mark-in-progress	<id>			Mark a task status as in progress")
@@ -222,7 +242,12 @@ func main() {
 		}
 
 	case "list":
-		err := listTasks()
+		status := ""
+		if len(os.Args) > 2 {
+			status = os.Args[2]
+		}
+
+		err := listTasks(status)
 		if isError(err) {
 			fmt.Printf("Error listing tasks: %v\n", err)
 			return
